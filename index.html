@@ -1,4 +1,4 @@
-<!doctype html>
+ <!doctype html>
 <html lang="id">
 <head>
   <meta charset="utf-8">
@@ -38,8 +38,6 @@
     /* small touches */
     .mono{font-family:monospace;font-size:13px}
     .kbd{background:#021018;padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.02);font-size:13px}
-
-    .history{max-height:120px;overflow-y:auto;background:var(--glass);padding:8px;border-radius:8px;font-size:13px;color:var(--muted)}
   </style>
 </head>
 <body>
@@ -47,7 +45,7 @@
     <header>
       <div>
         <h1>HP Optimizer</h1>
-        <p class="lead">Bersihkan, monitor FPS, cek koneksi jaringan (Mbps), & lihat aktivitas terkini.</p>
+        <p class="lead">Bersihkan, monitor FPS, dan cek koneksi jaringan (Mbps) — semua di satu halaman.</p>
       </div>
     </header>
 
@@ -97,13 +95,6 @@
           </div>
           <div id="speed-log" class="notice" style="margin-top:10px">Hasil speed test akan muncul di sini.</div>
         </section>
-
-        <hr style="margin:14px 0;border:none;border-top:1px solid rgba(255,255,255,0.03)">
-
-        <section>
-          <h3 style="margin:0 0 8px 0">History Aktivitas Terkini</h3>
-          <div class="history" id="history-box">Belum ada aktivitas yang tercatat.</div>
-        </section>
       </div>
 
       <aside class="card">
@@ -127,36 +118,27 @@
   </div>
 
   <script>
+    // ---------- Utilities ----------
     const el = id => document.getElementById(id);
-    const historyBox = el('history-box');
-    function addHistory(msg){
-      const time = new Date().toLocaleTimeString();
-      const p = document.createElement('div');
-      p.textContent = `[${time}] ${msg}`;
-      historyBox.appendChild(p);
-      if(historyBox.textContent.includes('Belum ada')) historyBox.innerHTML = '';
-    }
 
     // ---------- Clean / Optimize ----------
     el('btn-clean').addEventListener('click', async ()=>{
       try{
         localStorage.clear();
         sessionStorage.clear();
+        // try unregister service workers that belong to this origin
         if('serviceWorker' in navigator){
           const regs = await navigator.serviceWorker.getRegistrations();
           await Promise.all(regs.map(r=>r.unregister()));
         }
         el('clean-result').textContent = 'Selesai: cache lokal & service worker (origin) dibersihkan.';
-        addHistory('Melakukan pembersihan cache lokal & service worker.');
       }catch(e){
         el('clean-result').textContent = 'Gagal membersihkan: '+e.message;
-        addHistory('Gagal membersihkan: '+e.message);
       }
     });
 
     el('btn-suggestions').addEventListener('click', ()=>{
       alert('Tips singkat:\n1) Tutup aplikasi berat dan tab browser.\n2) Matikan sinkronisasi/backup saat main game.\n3) Gunakan mode hemat daya hanya jika tidak butuh FPS.\n4) Hapus file & foto yang tidak terpakai.');
-      addHistory('Membuka tips optimasi.');
     });
 
     // ---------- FPS Monitor & Booster ----------
@@ -183,6 +165,7 @@
     rafId = requestAnimationFrame(measure);
 
     el('btn-stop-anim').addEventListener('click', ()=>{
+      // Pause CSS animations and transitions by adding a style element
       if(!animationsPaused){
         window._savedAnimationStyle = document.createElement('style');
         window._savedAnimationStyle.id = 'pause-anim-style';
@@ -190,35 +173,31 @@
         document.head.appendChild(window._savedAnimationStyle);
         el('fps-note').textContent = 'Animasi halaman dijeda — beberapa elemen mungkin tampak "beku".';
         animationsPaused = true;
-        addHistory('Menjeda animasi halaman.');
       }else{
         const s = document.getElementById('pause-anim-style'); if(s) s.remove();
         el('fps-note').textContent = 'Animasi kembali normal.';
         animationsPaused = false;
-        addHistory('Mengembalikan animasi halaman.');
       }
     });
 
     el('btn-toggle-boost').addEventListener('click', ()=>{
       boostMode = !boostMode;
       if(boostMode){
+        // try reduce repaint by hiding heavy elements (demo canvas aside)
         document.documentElement.style.willChange = 'transform, opacity';
         document.documentElement.style['-webkit-transform'] = 'translateZ(0)';
         el('fps-note').textContent = 'Mode Game aktif: memprioritaskan rendering halaman ini. (Tidak mengubah refresh rate hardware)';
         el('btn-toggle-boost').textContent = 'Matikan Mode Game';
-        addHistory('Mengaktifkan Mode Game.');
       }else{
         document.documentElement.style.willChange = '';
         document.documentElement.style['-webkit-transform'] = '';
         el('fps-note').textContent = 'Mode Game dimatikan.';
         el('btn-toggle-boost').textContent = 'Aktifkan Mode Game';
-        addHistory('Mematikan Mode Game.');
       }
     });
 
+    // Simple canvas demo to show rendering vs FPS
     let runningDemo = false;
-    let demoRAF = null;
-    let dots = [];
     el('btn-run-demo').addEventListener('click', ()=>{
       const canvas = el('gameCanvas');
       if(!runningDemo){
@@ -226,16 +205,17 @@
         startDemo(canvas);
         el('btn-run-demo').textContent = 'Hentikan Demo';
         runningDemo = true;
-        addHistory('Menjalankan demo canvas.');
       }else{
         stopDemo();
         canvas.style.display = 'none';
         el('btn-run-demo').textContent = 'Jalankan Demo (Canvas)';
         runningDemo = false;
-        addHistory('Menghentikan demo canvas.');
       }
     });
 
+    // Canvas demo implementation
+    let demoRAF = null;
+    let dots = [];
     function startDemo(canvas){
       const ctx = canvas.getContext('2d');
       dots = Array.from({length:40}, ()=>({x:Math.random()*canvas.width,y:Math.random()*canvas.height,vx:(Math.random()-0.5)*1.8,vy:(Math.random()-0.5)*1.8,r:6+Math.random()*8}));
@@ -254,7 +234,7 @@
     function stopDemo(){ if(demoRAF) cancelAnimationFrame(demoRAF); demoRAF = null; }
 
     // ---------- Network info & tests ----------
-    const log = txt => {el('speed-log').textContent = txt; addHistory(txt);};
+    const log = txt => el('speed-log').textContent = txt;
 
     function showConnectionInfo(){
       const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
@@ -262,7 +242,7 @@
         el('type').textContent = conn.effectiveType || conn.type || '-';
         if(conn.downlink) el('downlink').textContent = (Math.round(conn.downlink*10)/10) + ' Mbps';
         if(conn.rtt) el('rtt').textContent = (conn.rtt)+ ' ms';
-        log('Menampilkan info koneksi.');
+        log('Sumber: Network Information API (estimasi).');
       }else{
         el('type').textContent = 'Tidak tersedia';
         log('Network Information API tidak tersedia di browser.');
@@ -271,18 +251,68 @@
 
     el('btn-conninfo').addEventListener('click', showConnectionInfo);
 
+    // Ping test (approx) by fetching a small resource
     async function pingTest(){
       const url = 'https://upload.wikimedia.org/wikipedia/commons/3/3f/Fronalpstock_big.jpg';
       try{
         const t0 = performance.now();
+        // HEAD request might be blocked; use GET but limit by aborting quickly
         const controller = new AbortController();
         const id = setTimeout(()=>controller.abort(), 5000);
-        await fetch(url, {method:'GET',signal:controller.signal, cache:'no-store'});
+        const resp = await fetch(url, {method:'GET',signal:controller.signal, cache:'no-store'});
         clearTimeout(id);
         const t1 = performance.now();
         const time = Math.round(t1-t0);
         el('ping').textContent = time + ' ms';
-        log('Ping test selesai.');
+        log('Ping test selesai (fetch resource).');
       }catch(e){
         el('ping').textContent = 'Gagal';
-        log('Ping gagal: '+e.message
+        log('Ping gagal: '+e.message);
+      }
+    }
+    el('btn-ping').addEventListener('click', pingTest);
+
+    // Speed test by downloading a known image and measuring bytes/time
+    async function speedTest(){
+      const url = 'https://upload.wikimedia.org/wikipedia/commons/3/3f/Fronalpstock_big.jpg'; // ~4MB
+      log('Mulai speed test — mengunduh file uji (may take a few seconds)...');
+      try{
+        const t0 = performance.now();
+        const resp = await fetch(url, {cache:'no-store'});
+        const reader = resp.body.getReader();
+        let received = 0;
+        const start = performance.now();
+        while(true){
+          const {done, value} = await reader.read();
+          if(done) break;
+          received += value.length;
+          // update intermediate
+          const now = performance.now();
+          const secs = Math.max((now - start)/1000, 0.0001);
+          const bps = (received*8)/secs; // bits per second
+          const mbps = (bps/1024/1024).toFixed(2);
+          el('downlink').textContent = mbps + ' Mbps';
+        }
+        const t1 = performance.now();
+        const secs = (t1-t0)/1000;
+        const bps = (received*8)/secs;
+        const finalMbps = (bps/1024/1024).toFixed(2);
+        el('downlink').textContent = finalMbps + ' Mbps';
+        log('Speed test selesai — hasil bersifat indikatif.');
+      }catch(e){
+        log('Speed test gagal: '+e.message+' — fallback ke Network Information API (jika tersedia).');
+        const conn = navigator.connection;
+        if(conn && conn.downlink) el('downlink').textContent = (Math.round(conn.downlink*10)/10) + ' Mbps';
+        else el('downlink').textContent = '-';
+      }
+    }
+    el('btn-speed').addEventListener('click', speedTest);
+
+    // On load: show basic info
+    showConnectionInfo();
+
+    // Accessibility: warn user about limitations
+    console.info('HP Optimizer: tools are diagnostics and UI performance helpers. This page cannot change hardware refresh rate or close other apps on device.');
+  </script>
+</body>
+</html>
