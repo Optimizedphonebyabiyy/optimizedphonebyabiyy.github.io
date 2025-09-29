@@ -1,209 +1,288 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Optimizer Phone v4.0 ⚠️ </title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>HP Optimizer — Clean, FPS & Network Check</title>
   <style>
-    body{font-family:Arial, sans-serif;background:#f0f4ff;color:#222;margin:0;padding:0}
-    header{background:#2563eb;padding:15px;text-align:center;font-size:22px;font-weight:bold;color:white}
-    main{padding:20px;max-width:900px;margin:auto}
-    .card{background:white;padding:20px;margin:15px 0;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.1);transition:0.3s}
-    .card:hover{transform:translateY(-3px);box-shadow:0 8px 18px rgba(0,0,0,0.2)}
-    button{padding:12px 18px;margin:8px;border:none;border-radius:8px;cursor:pointer;font-weight:bold;font-size:15px}
-    .primary{background:#2563eb;color:white}
-    .danger{background:#dc2626;color:white}
-    .secondary{background:#374151;color:white}
-    #log{background:#f9fafb;border:1px solid #e5e7eb;height:200px;overflow-y:auto;padding:10px;border-radius:8px;font-size:14px}
-    .progress{width:100%;background:#e5e7eb;border-radius:8px;overflow:hidden;margin:10px 0}
-    .progress-bar{height:14px;background:#2563eb;width:0%;transition:width 0.3s}
-    @media(max-width:600px){header{font-size:18px}button{width:100%}}
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#0ea5ff;--muted:#94a3b8;--glass: rgba(255,255,255,0.04)}
+    html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial;color:#e6eef8;background:linear-gradient(180deg,#071426 0%,#041025 100%);}
+    .wrap{max-width:980px;margin:18px auto;padding:18px}
+    header{display:flex;gap:12px;align-items:center}
+    h1{margin:0;font-size:18px}
+    p.lead{margin:0;color:var(--muted);font-size:13px}
+
+    .grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:16px}
+    @media(min-width:880px){.grid{grid-template-columns:1fr 360px}}
+
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:14px;box-shadow:0 6px 18px rgba(2,6,23,0.6);}
+    .row{display:flex;gap:8px;align-items:center}
+    button{background:var(--accent);border:none;color:#04203b;padding:8px 12px;border-radius:10px;font-weight:600}
+    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--accent)}
+    small{color:var(--muted)}
+
+    .stats{display:flex;gap:8px;flex-wrap:wrap}
+    .stat{flex:1;min-width:120px;background:var(--glass);padding:10px;border-radius:10px}
+    .stat h2{margin:0;font-size:20px}
+    .stat p{margin:6px 0 0 0;color:var(--muted);font-size:13px}
+
+    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .notice{background:#042035;padding:10px;border-radius:8px;color:var(--muted);font-size:13px}
+
+    .fps-box{display:flex;flex-direction:column;gap:8px}
+    .meter{height:10px;background:rgba(255,255,255,0.06);border-radius:8px;overflow:hidden}
+    .bar{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),#7dd3fc)}
+
+    footer{margin-top:12px;text-align:center;color:var(--muted);font-size:12px}
+
+    /* small touches */
+    .mono{font-family:monospace;font-size:13px}
+    .kbd{background:#021018;padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.02);font-size:13px}
+
+    .history{max-height:120px;overflow-y:auto;background:var(--glass);padding:8px;border-radius:8px;font-size:13px;color:var(--muted)}
   </style>
 </head>
 <body>
-<header>Optimizer Device ⚠️ v4.0</header>
-<main>
-  <div class="card">
-    <h3>🔍 Virus Scan</h3>
-    <button class="primary" id="startScanBtn">Mulai Scan</button>
-    <div class="progress"><div class="progress-bar" id="scanProgress"></div></div>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>HP Optimizer</h1>
+        <p class="lead">Bersihkan, monitor FPS, cek koneksi jaringan (Mbps), & lihat aktivitas terkini.</p>
+      </div>
+    </header>
+
+    <div class="grid">
+      <div class="card" id="main">
+        <section>
+          <h3 style="margin:0 0 8px 0">Optimasi & Pembersihan</h3>
+          <div class="row">
+            <button id="btn-clean">Bersihkan (cache lokal)</button>
+            <button class="btn-ghost" id="btn-suggestions">Tips cepat</button>
+          </div>
+          <div style="margin-top:10px" id="clean-result" class="notice">Belum ada aksi.</div>
+        </section>
+
+        <hr style="margin:14px 0;border:none;border-top:1px solid rgba(255,255,255,0.03)">
+
+        <section>
+          <h3 style="margin:0 0 8px 0">FPS Monitor & Booster</h3>
+          <div class="fps-box">
+            <div class="row"><strong>FPS saat ini:</strong> <div style="width:10px"></div> <div id="fpsValue" class="mono">-</div></div>
+            <div class="meter"><div class="bar" id="fpsBar"></div></div>
+            <div class="controls">
+              <button id="btn-toggle-boost">Aktifkan Mode Game</button>
+              <button class="btn-ghost" id="btn-stop-anim">Jeda Animasi Halaman</button>
+              <button class="btn-ghost" id="btn-run-demo">Jalankan Demo (Canvas)</button>
+            </div>
+            <div id="fps-note" class="notice">Catatan: Aplikasi web tidak bisa mengubah refresh rate layar perangkat. "Mode Game" di sini memprioritaskan rendering pada halaman ini dan menghentikan animasi lain — hasil tergantung device.</div>
+            <canvas id="gameCanvas" width="540" height="240" style="width:100%;border-radius:8px;display:none;margin-top:8px"></canvas>
+          </div>
+        </section>
+
+        <hr style="margin:14px 0;border:none;border-top:1px solid rgba(255,255,255,0.03)">
+
+        <section>
+          <h3 style="margin:0 0 8px 0">Tes Koneksi & Kecepatan</h3>
+          <div class="row">
+            <button id="btn-speed">Jalankan Speed Test</button>
+            <button class="btn-ghost" id="btn-ping">Cek Ping</button>
+            <button class="btn-ghost" id="btn-conninfo">Info Koneksi</button>
+          </div>
+
+          <div style="margin-top:10px" class="stats">
+            <div class="stat"><h2 id="downlink">- Mbps</h2><p>Download (estimasi)</p></div>
+            <div class="stat"><h2 id="ping">- ms</h2><p>Ping</p></div>
+            <div class="stat"><h2 id="type">-</h2><p>Tipe Koneksi</p></div>
+            <div class="stat"><h2 id="rtt">- ms</h2><p>RTT (estimated)</p></div>
+          </div>
+          <div id="speed-log" class="notice" style="margin-top:10px">Hasil speed test akan muncul di sini.</div>
+        </section>
+
+        <hr style="margin:14px 0;border:none;border-top:1px solid rgba(255,255,255,0.03)">
+
+        <section>
+          <h3 style="margin:0 0 8px 0">History Aktivitas Terkini</h3>
+          <div class="history" id="history-box">Belum ada aktivitas yang tercatat.</div>
+        </section>
+      </div>
+
+      <aside class="card">
+        <h3 style="margin:0 0 8px 0">Panduan Singkat</h3>
+        <ol style="padding-left:16px;margin:0;color:var(--muted);font-size:14px">
+          <li>Tutup aplikasi berat (browser tab, game) untuk mengosongkan RAM.</li>
+          <li>Gunakan <span class="kbd">Mode Game</span> atau matikan animasi untuk stabilkan FPS.</li>
+          <li>Untuk jaringan: gunakan Wi‑Fi 5GHz atau jaringan seluler yang kuat.</li>
+          <li>Perbarui OS & driver graphics apabila tersedia.</li>
+        </ol>
+
+        <hr style="margin:12px 0;border:none;border-top:1px solid rgba(255,255,255,0.03)">
+        <h4 style="margin:0 0 8px 0">Catatan Penting</h4>
+        <p style="margin:0;color:var(--muted);font-size:13px">Halaman web ini menyediakan alat diagnostik dan beberapa trik UI-only. Website tidak dapat secara langsung mengubah hardware atau memaksa panel layar naik refresh rate — fitur "booster" di sini memaksimalkan prioritas rendering pada halaman dan mematikan animasi yang tidak perlu.</p>
+      </aside>
+    </div>
+
+    <footer class="card">
+      <div>Made with ♥ — HP Optimizer • Versi ringan (langsung di browser)</div>
+    </footer>
   </div>
 
-  <div class="card">
-    <h3>⚡ Quick Clean</h3>
-    <button class="danger" id="quickCleanBtn">Bersihkan Cache</button>
-  </div>
-
-  <div class="card">
-    <h3>🌐 Cek Koneksi Internet</h3>
-    <button class="secondary" id="checkNetBtn">Periksa Koneksi</button>
-    <p id="netStatus">Status: Belum dicek</p>
-    <p id="netSpeed"></p>
-  </div>
-
-  <div class="card">
-    <h3>🧹 History Cleaner</h3>
-    <button class="secondary" id="clearHistoryBtn">Hapus Riwayat</button>
-    <p id="historyResult"></p>
-  </div>
-
-  <div class="card">
-    <h3>🚀 RAM Booster</h3>
-    <button class="primary" id="boostRamBtn">Boost RAM</button>
-    <p id="ramStatus"></p>
-  </div>
-
-  <div class="card">
-    <h3>🔋 Battery Saver</h3>
-    <button class="secondary" id="batteryTipBtn">Tampilkan Tips</button>
-    <p id="batteryTips"></p>
-  </div>
-
-  <div class="card">
-    <h3>💾 Storage Cleaner</h3>
-    <button class="danger" id="cleanStorageBtn">Scan & Bersihkan</button>
-    <p id="storageStatus"></p>
-  </div>
-
-  <div class="card">
-    <h3>📱 App Manager</h3>
-    <button class="secondary" id="showAppsBtn">Tampilkan Aplikasi</button>
-    <ul id="appList"></ul>
-  </div>
-
-  <div class="card">
-    <h3>⚙️ Performance Optimizer</h3>
-    <button class="primary" id="optimizeBtn">Optimalkan</button>
-    <p id="optStatus"></p>
-  </div>
-
-  <div class="card">
-    <h3>📝 Log Aktivitas</h3>
-    <div id="log"></div>
-  </div>
-</main>
-
-<script>
-function addLog(msg,type="info"){
-  const log=document.getElementById('log');
-  const p=document.createElement('p');
-  p.textContent=`[${new Date().toLocaleTimeString()}] ${msg}`;
-  if(type==="error")p.style.color="tomato";
-  if(type==="success")p.style.color="green";
-  log.appendChild(p);
-  log.scrollTop=log.scrollHeight;
-}
-
-// Virus Scan
-function startScan(){
-  addLog("Memulai pemindaian...");
-  let progress=0;
-  const bar=document.getElementById('scanProgress');
-  const interval=setInterval(()=>{
-    progress+=20;
-    bar.style.width=progress+"%";
-    if(progress>=100){
-      clearInterval(interval);
-      addLog("Scan selesai. Tidak ada ancaman ditemukan ✅","success");
+  <script>
+    const el = id => document.getElementById(id);
+    const historyBox = el('history-box');
+    function addHistory(msg){
+      const time = new Date().toLocaleTimeString();
+      const p = document.createElement('div');
+      p.textContent = `[${time}] ${msg}`;
+      historyBox.appendChild(p);
+      if(historyBox.textContent.includes('Belum ada')) historyBox.innerHTML = '';
     }
-  },500);
-}
 
-// Quick Clean
-function quickClean(){
-  addLog("Membersihkan cache browser...");
-  setTimeout(()=>addLog("Cache dibersihkan.","success"),1000);
-}
+    // ---------- Clean / Optimize ----------
+    el('btn-clean').addEventListener('click', async ()=>{
+      try{
+        localStorage.clear();
+        sessionStorage.clear();
+        if('serviceWorker' in navigator){
+          const regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map(r=>r.unregister()));
+        }
+        el('clean-result').textContent = 'Selesai: cache lokal & service worker (origin) dibersihkan.';
+        addHistory('Melakukan pembersihan cache lokal & service worker.');
+      }catch(e){
+        el('clean-result').textContent = 'Gagal membersihkan: '+e.message;
+        addHistory('Gagal membersihkan: '+e.message);
+      }
+    });
 
-// Internet Speed Test
-async function checkConnection(){
-  const statusEl=document.getElementById('netStatus');
-  const speedEl=document.getElementById('netSpeed');
-  try{
-    const url="https://speed.cloudflare.com/__down?bytes=500000";
-    const start=performance.now();
-    const res=await fetch(url);
-    const end=performance.now();
-    if(!res.ok)throw new Error("Tidak bisa terhubung");
-    const time=(end-start)/1000;
-    const sizeMB=0.5;
-    const speed=(sizeMB/time).toFixed(2);
-    statusEl.textContent="Status: Terhubung ✅";
-    speedEl.textContent="Kecepatan: "+speed+" Mbps";
-    addLog("Koneksi aktif. Speed: "+speed+" Mbps","success");
-  }catch(e){
-    statusEl.textContent="Status: Offline ❌";
-    speedEl.textContent="";
-    addLog("Tidak ada koneksi internet.","error");
-  }
-}
+    el('btn-suggestions').addEventListener('click', ()=>{
+      alert('Tips singkat:\n1) Tutup aplikasi berat dan tab browser.\n2) Matikan sinkronisasi/backup saat main game.\n3) Gunakan mode hemat daya hanya jika tidak butuh FPS.\n4) Hapus file & foto yang tidak terpakai.');
+      addHistory('Membuka tips optimasi.');
+    });
 
-// History Cleaner
-function clearHistory(){
-  document.getElementById('historyResult').textContent="Riwayat dibersihkan (simulasi).";
-  addLog("Riwayat browser dibersihkan (optimized).","success");
-}
+    // ---------- FPS Monitor & Booster ----------
+    let lastTime = performance.now();
+    let frameCount = 0;
+    let fps = 0;
+    let rafId = null;
+    let animationsPaused = false;
+    let boostMode = false;
 
-// RAM Booster
-function boostRam(){
-  document.getElementById('ramStatus').textContent="RAM dioptimalkan 🚀";
-  addLog("RAM dioptimalkan (optimized).","success");
-}
+    function measure(now){
+      frameCount++;
+      const delta = now - lastTime;
+      if(delta >= 500){
+        fps = Math.round((frameCount / delta) * 1000);
+        el('fpsValue').textContent = fps + ' fps';
+        const pct = Math.min(100, Math.round((fps/60)*100));
+        el('fpsBar').style.width = pct + '%';
+        frameCount = 0;
+        lastTime = now;
+      }
+      rafId = requestAnimationFrame(measure);
+    }
+    rafId = requestAnimationFrame(measure);
 
-// Battery Tips
-function batteryTips(){
-  const tips=[
-    "Kurangi kecerahan layar",
-    "Matikan GPS bila tidak digunakan",
-    "Gunakan mode hemat daya",
-    "Tutup aplikasi di latar belakang"
-  ];
-  const tip=tips[Math.floor(Math.random()*tips.length)];
-  document.getElementById('batteryTips').textContent=tip;
-  addLog("Tips baterai: "+tip,"info");
-}
+    el('btn-stop-anim').addEventListener('click', ()=>{
+      if(!animationsPaused){
+        window._savedAnimationStyle = document.createElement('style');
+        window._savedAnimationStyle.id = 'pause-anim-style';
+        window._savedAnimationStyle.textContent = '*{animation-play-state:paused !important; transition:none !important; caret-color:transparent !important}';
+        document.head.appendChild(window._savedAnimationStyle);
+        el('fps-note').textContent = 'Animasi halaman dijeda — beberapa elemen mungkin tampak "beku".';
+        animationsPaused = true;
+        addHistory('Menjeda animasi halaman.');
+      }else{
+        const s = document.getElementById('pause-anim-style'); if(s) s.remove();
+        el('fps-note').textContent = 'Animasi kembali normal.';
+        animationsPaused = false;
+        addHistory('Mengembalikan animasi halaman.');
+      }
+    });
 
-// Storage Cleaner
-function cleanStorage(){
-  document.getElementById('storageStatus').textContent="200MB sampah berhasil dibersihkan.";
-  addLog("Storage dibersihkan: 200MB file sampah (simulasi).","success");
-}
+    el('btn-toggle-boost').addEventListener('click', ()=>{
+      boostMode = !boostMode;
+      if(boostMode){
+        document.documentElement.style.willChange = 'transform, opacity';
+        document.documentElement.style['-webkit-transform'] = 'translateZ(0)';
+        el('fps-note').textContent = 'Mode Game aktif: memprioritaskan rendering halaman ini. (Tidak mengubah refresh rate hardware)';
+        el('btn-toggle-boost').textContent = 'Matikan Mode Game';
+        addHistory('Mengaktifkan Mode Game.');
+      }else{
+        document.documentElement.style.willChange = '';
+        document.documentElement.style['-webkit-transform'] = '';
+        el('fps-note').textContent = 'Mode Game dimatikan.';
+        el('btn-toggle-boost').textContent = 'Aktifkan Mode Game';
+        addHistory('Mematikan Mode Game.');
+      }
+    });
 
-// App Manager
-function showApps(){
-  const apps=["WhatsApp","Instagram","Facebook","TikTok","YouTube"];
-  const list=document.getElementById('appList');
-  list.innerHTML="";
-  apps.forEach(app=>{
-    const li=document.createElement('li');
-    li.textContent=app+" ";
-    const btn=document.createElement('button');
-    btn.textContent="Uninstall";
-    btn.className="danger";
-    btn.onclick=()=>{addLog(app+" dihapus.","success");li.remove();};
-    li.appendChild(btn);
-    list.appendChild(li);
-  });
-  addLog("Daftar aplikasi ditampilkan.","info");
-}
+    let runningDemo = false;
+    let demoRAF = null;
+    let dots = [];
+    el('btn-run-demo').addEventListener('click', ()=>{
+      const canvas = el('gameCanvas');
+      if(!runningDemo){
+        canvas.style.display = 'block';
+        startDemo(canvas);
+        el('btn-run-demo').textContent = 'Hentikan Demo';
+        runningDemo = true;
+        addHistory('Menjalankan demo canvas.');
+      }else{
+        stopDemo();
+        canvas.style.display = 'none';
+        el('btn-run-demo').textContent = 'Jalankan Demo (Canvas)';
+        runningDemo = false;
+        addHistory('Menghentikan demo canvas.');
+      }
+    });
 
-// Performance Optimizer
-function optimize(){
-  document.getElementById('optStatus').textContent="Performa sistem ditingkatkan 🚀";
-  addLog("Performa sistem dioptimalkan (Optimized).","success");
-}
+    function startDemo(canvas){
+      const ctx = canvas.getContext('2d');
+      dots = Array.from({length:40}, ()=>({x:Math.random()*canvas.width,y:Math.random()*canvas.height,vx:(Math.random()-0.5)*1.8,vy:(Math.random()-0.5)*1.8,r:6+Math.random()*8}));
+      function frame(){
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        for(const d of dots){
+          d.x += d.vx; d.y += d.vy;
+          if(d.x<0||d.x>canvas.width) d.vx *= -1;
+          if(d.y<0||d.y>canvas.height) d.vy *= -1;
+          ctx.beginPath(); ctx.arc(d.x,d.y,d.r,0,Math.PI*2); ctx.fillStyle='rgba(14,165,255,0.9)'; ctx.fill();
+        }
+        demoRAF = requestAnimationFrame(frame);
+      }
+      demoRAF = requestAnimationFrame(frame);
+    }
+    function stopDemo(){ if(demoRAF) cancelAnimationFrame(demoRAF); demoRAF = null; }
 
-// Event Listeners
-document.getElementById('startScanBtn').addEventListener('click',startScan);
-document.getElementById('quickCleanBtn').addEventListener('click',quickClean);
-document.getElementById('checkNetBtn').addEventListener('click',checkConnection);
-document.getElementById('clearHistoryBtn').addEventListener('click',clearHistory);
-document.getElementById('boostRamBtn').addEventListener('click',boostRam);
-document.getElementById('batteryTipBtn').addEventListener('click',batteryTips);
-document.getElementById('cleanStorageBtn').addEventListener('click',cleanStorage);
-document.getElementById('showAppsBtn').addEventListener('click',showApps);
-document.getElementById('optimizeBtn').addEventListener('click',optimize);
-</script>
-</body>
-</html>
+    // ---------- Network info & tests ----------
+    const log = txt => {el('speed-log').textContent = txt; addHistory(txt);};
+
+    function showConnectionInfo(){
+      const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      if(conn){
+        el('type').textContent = conn.effectiveType || conn.type || '-';
+        if(conn.downlink) el('downlink').textContent = (Math.round(conn.downlink*10)/10) + ' Mbps';
+        if(conn.rtt) el('rtt').textContent = (conn.rtt)+ ' ms';
+        log('Menampilkan info koneksi.');
+      }else{
+        el('type').textContent = 'Tidak tersedia';
+        log('Network Information API tidak tersedia di browser.');
+      }
+    }
+
+    el('btn-conninfo').addEventListener('click', showConnectionInfo);
+
+    async function pingTest(){
+      const url = 'https://upload.wikimedia.org/wikipedia/commons/3/3f/Fronalpstock_big.jpg';
+      try{
+        const t0 = performance.now();
+        const controller = new AbortController();
+        const id = setTimeout(()=>controller.abort(), 5000);
+        await fetch(url, {method:'GET',signal:controller.signal, cache:'no-store'});
+        clearTimeout(id);
+        const t1 = performance.now();
+        const time = Math.round(t1-t0);
+        el('ping').textContent = time + ' ms';
+        log('Ping test selesai.');
+      }catch(e){
+        el('ping').textContent = 'Gagal';
+        log('Ping gagal: '+e.message
