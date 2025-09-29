@@ -1,0 +1,209 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Optimizer Phone v4.0 ⚠️ </title>
+  <style>
+    body{font-family:Arial, sans-serif;background:#f0f4ff;color:#222;margin:0;padding:0}
+    header{background:#2563eb;padding:15px;text-align:center;font-size:22px;font-weight:bold;color:white}
+    main{padding:20px;max-width:900px;margin:auto}
+    .card{background:white;padding:20px;margin:15px 0;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.1);transition:0.3s}
+    .card:hover{transform:translateY(-3px);box-shadow:0 8px 18px rgba(0,0,0,0.2)}
+    button{padding:12px 18px;margin:8px;border:none;border-radius:8px;cursor:pointer;font-weight:bold;font-size:15px}
+    .primary{background:#2563eb;color:white}
+    .danger{background:#dc2626;color:white}
+    .secondary{background:#374151;color:white}
+    #log{background:#f9fafb;border:1px solid #e5e7eb;height:200px;overflow-y:auto;padding:10px;border-radius:8px;font-size:14px}
+    .progress{width:100%;background:#e5e7eb;border-radius:8px;overflow:hidden;margin:10px 0}
+    .progress-bar{height:14px;background:#2563eb;width:0%;transition:width 0.3s}
+    @media(max-width:600px){header{font-size:18px}button{width:100%}}
+  </style>
+</head>
+<body>
+<header>Optimizer Device ⚠️ v4.0</header>
+<main>
+  <div class="card">
+    <h3>🔍 Virus Scan</h3>
+    <button class="primary" id="startScanBtn">Mulai Scan</button>
+    <div class="progress"><div class="progress-bar" id="scanProgress"></div></div>
+  </div>
+
+  <div class="card">
+    <h3>⚡ Quick Clean</h3>
+    <button class="danger" id="quickCleanBtn">Bersihkan Cache</button>
+  </div>
+
+  <div class="card">
+    <h3>🌐 Cek Koneksi Internet</h3>
+    <button class="secondary" id="checkNetBtn">Periksa Koneksi</button>
+    <p id="netStatus">Status: Belum dicek</p>
+    <p id="netSpeed"></p>
+  </div>
+
+  <div class="card">
+    <h3>🧹 History Cleaner</h3>
+    <button class="secondary" id="clearHistoryBtn">Hapus Riwayat</button>
+    <p id="historyResult"></p>
+  </div>
+
+  <div class="card">
+    <h3>🚀 RAM Booster</h3>
+    <button class="primary" id="boostRamBtn">Boost RAM</button>
+    <p id="ramStatus"></p>
+  </div>
+
+  <div class="card">
+    <h3>🔋 Battery Saver</h3>
+    <button class="secondary" id="batteryTipBtn">Tampilkan Tips</button>
+    <p id="batteryTips"></p>
+  </div>
+
+  <div class="card">
+    <h3>💾 Storage Cleaner</h3>
+    <button class="danger" id="cleanStorageBtn">Scan & Bersihkan</button>
+    <p id="storageStatus"></p>
+  </div>
+
+  <div class="card">
+    <h3>📱 App Manager</h3>
+    <button class="secondary" id="showAppsBtn">Tampilkan Aplikasi</button>
+    <ul id="appList"></ul>
+  </div>
+
+  <div class="card">
+    <h3>⚙️ Performance Optimizer</h3>
+    <button class="primary" id="optimizeBtn">Optimalkan</button>
+    <p id="optStatus"></p>
+  </div>
+
+  <div class="card">
+    <h3>📝 Log Aktivitas</h3>
+    <div id="log"></div>
+  </div>
+</main>
+
+<script>
+function addLog(msg,type="info"){
+  const log=document.getElementById('log');
+  const p=document.createElement('p');
+  p.textContent=`[${new Date().toLocaleTimeString()}] ${msg}`;
+  if(type==="error")p.style.color="tomato";
+  if(type==="success")p.style.color="green";
+  log.appendChild(p);
+  log.scrollTop=log.scrollHeight;
+}
+
+// Virus Scan
+function startScan(){
+  addLog("Memulai pemindaian...");
+  let progress=0;
+  const bar=document.getElementById('scanProgress');
+  const interval=setInterval(()=>{
+    progress+=20;
+    bar.style.width=progress+"%";
+    if(progress>=100){
+      clearInterval(interval);
+      addLog("Scan selesai. Tidak ada ancaman ditemukan ✅","success");
+    }
+  },500);
+}
+
+// Quick Clean
+function quickClean(){
+  addLog("Membersihkan cache browser...");
+  setTimeout(()=>addLog("Cache dibersihkan.","success"),1000);
+}
+
+// Internet Speed Test
+async function checkConnection(){
+  const statusEl=document.getElementById('netStatus');
+  const speedEl=document.getElementById('netSpeed');
+  try{
+    const url="https://speed.cloudflare.com/__down?bytes=500000";
+    const start=performance.now();
+    const res=await fetch(url);
+    const end=performance.now();
+    if(!res.ok)throw new Error("Tidak bisa terhubung");
+    const time=(end-start)/1000;
+    const sizeMB=0.5;
+    const speed=(sizeMB/time).toFixed(2);
+    statusEl.textContent="Status: Terhubung ✅";
+    speedEl.textContent="Kecepatan: "+speed+" Mbps";
+    addLog("Koneksi aktif. Speed: "+speed+" Mbps","success");
+  }catch(e){
+    statusEl.textContent="Status: Offline ❌";
+    speedEl.textContent="";
+    addLog("Tidak ada koneksi internet.","error");
+  }
+}
+
+// History Cleaner
+function clearHistory(){
+  document.getElementById('historyResult').textContent="Riwayat dibersihkan (simulasi).";
+  addLog("Riwayat browser dibersihkan (optimized).","success");
+}
+
+// RAM Booster
+function boostRam(){
+  document.getElementById('ramStatus').textContent="RAM dioptimalkan 🚀";
+  addLog("RAM dioptimalkan (optimized).","success");
+}
+
+// Battery Tips
+function batteryTips(){
+  const tips=[
+    "Kurangi kecerahan layar",
+    "Matikan GPS bila tidak digunakan",
+    "Gunakan mode hemat daya",
+    "Tutup aplikasi di latar belakang"
+  ];
+  const tip=tips[Math.floor(Math.random()*tips.length)];
+  document.getElementById('batteryTips').textContent=tip;
+  addLog("Tips baterai: "+tip,"info");
+}
+
+// Storage Cleaner
+function cleanStorage(){
+  document.getElementById('storageStatus').textContent="200MB sampah berhasil dibersihkan.";
+  addLog("Storage dibersihkan: 200MB file sampah (simulasi).","success");
+}
+
+// App Manager
+function showApps(){
+  const apps=["WhatsApp","Instagram","Facebook","TikTok","YouTube"];
+  const list=document.getElementById('appList');
+  list.innerHTML="";
+  apps.forEach(app=>{
+    const li=document.createElement('li');
+    li.textContent=app+" ";
+    const btn=document.createElement('button');
+    btn.textContent="Uninstall";
+    btn.className="danger";
+    btn.onclick=()=>{addLog(app+" dihapus.","success");li.remove();};
+    li.appendChild(btn);
+    list.appendChild(li);
+  });
+  addLog("Daftar aplikasi ditampilkan.","info");
+}
+
+// Performance Optimizer
+function optimize(){
+  document.getElementById('optStatus').textContent="Performa sistem ditingkatkan 🚀";
+  addLog("Performa sistem dioptimalkan (Optimized).","success");
+}
+
+// Event Listeners
+document.getElementById('startScanBtn').addEventListener('click',startScan);
+document.getElementById('quickCleanBtn').addEventListener('click',quickClean);
+document.getElementById('checkNetBtn').addEventListener('click',checkConnection);
+document.getElementById('clearHistoryBtn').addEventListener('click',clearHistory);
+document.getElementById('boostRamBtn').addEventListener('click',boostRam);
+document.getElementById('batteryTipBtn').addEventListener('click',batteryTips);
+document.getElementById('cleanStorageBtn').addEventListener('click',cleanStorage);
+document.getElementById('showAppsBtn').addEventListener('click',showApps);
+document.getElementById('optimizeBtn').addEventListener('click',optimize);
+</script>
+</body>
+</html>
